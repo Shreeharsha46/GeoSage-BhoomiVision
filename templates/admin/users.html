@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Manage Users{% endblock %}
+{% block page_title %}Manage Users{% endblock %}
+{% block content %}
+<div class="card-gs">
+  <div class="card-header-gs"><h5><i class="bi bi-people"></i>Authorized users</h5>
+    <span class="small text-muted">administrator view — system-wide</span></div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>User</th><th>Role</th><th>Parcels</th><th>Analyses</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+      {% for person in people %}
+        <tr>
+          <td>
+            <div>{{ person.name }}</div>
+            <div class="small text-muted">{{ person.email }}</div>
+          </td>
+          <td><span class="badge-{{ 'verified' if person.role == 'admin' else 'neutral' }}">{{ person.role }}</span></td>
+          <td>{{ person.parcel_count }}</td>
+          <td>{{ person.analysis_count }}</td>
+          <td>
+            {% if person.is_active %}<span class="badge-verified">active</span>
+            {% else %}<span class="badge-rejected">deactivated</span>{% endif %}
+          </td>
+          <td class="text-end">
+            {% if person.id != current_user.id %}
+            <form class="d-inline" method="post" action="/admin/users/{{ person.id }}/role">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="role" value="{{ 'analyst' if person.role == 'admin' else 'admin' }}">
+              <button class="btn btn-sm btn-outline-gs">Make {{ 'analyst' if person.role == 'admin' else 'admin' }}</button>
+            </form>
+            <form class="d-inline" method="post" action="/admin/users/{{ person.id }}/toggle"
+                  data-confirm="{{ 'Reactivate' if not person.is_active else 'Deactivate' }} {{ person.email }}?">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm btn-outline-gs">{{ 'Activate' if not person.is_active else 'Deactivate' }}</button>
+            </form>
+            {% else %}
+            <span class="small text-muted">you</span>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

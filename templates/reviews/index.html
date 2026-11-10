@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Reviews{% endblock %}
+{% block page_title %}Verification Queue{% endblock %}
+{% block content %}
+<div class="card bg-gs-card border-gs">
+    <table class="table table-dark table-hover">
+        <thead><tr><th>Parcel</th><th>Analysis Date</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+            {% for a in queue %}
+            <tr>
+                <td>{{ a.analysis.parcel.parcel_name }}</td>
+                <td>{{ a.analysis.analysis_date.strftime('%Y-%m-%d') }}</td>
+                <td>{{ status_labels.get(a.status) }}</td>
+                <td>
+                    {% if a.can_review %}
+                    <a href="{{ url_for('reviews.index') }}" class="btn btn-sm btn-primary">Review</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

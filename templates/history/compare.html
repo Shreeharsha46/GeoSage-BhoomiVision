@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Compare Analyses{% endblock %}
+{% block page_title %}Compare Analyses{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-12">
+    <div class="card bg-gs-card border-gs">
+      <div class="card-header border-gs">Analysis #{{ a.id }} vs #{{ b.id }}</div>
+      <div class="card-body">
+        <table class="table table-dark">
+          <thead><tr><th>Metric</th><th>Analysis #{{ a.id }}</th><th>Analysis #{{ b.id }}</th></tr></thead>
+          <tbody>
+            <tr><td>Parcel</td><td>{{ a.parcel.parcel_name }}</td><td>{{ b.parcel.parcel_name }}</td></tr>
+            <tr><td>Date</td><td>{{ a.analysis_date.strftime('%Y-%m-%d %H:%M') }}</td><td>{{ b.analysis_date.strftime('%Y-%m-%d %H:%M') }}</td></tr>
+            <tr><td>Change %</td><td>{{ a.change_percentage|round(2) if a.change_percentage else '—' }}</td><td>{{ b.change_percentage|round(2) if b.change_percentage else '—' }}</td></tr>
+            <tr><td>Priority</td><td>{{ a.review_priority }}</td><td>{{ b.review_priority }}</td></tr>
+          </tbody>
+        </table>
+        <h5>Land Use Comparison</h5>
+        <table class="table table-dark">
+          <thead><tr><th>Category</th><th>A</th><th>B</th></tr></thead>
+          <tbody>
+            {% for row in lu_rows %}
+            <tr><td>{{ row.category }}</td><td>{{ (row.a_new * 100)|round(1) }}%</td><td>{{ (row.b_new * 100)|round(1) if row.b_new is not None else '—' }}%</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Land Parcels{% endblock %}
+{% block page_title %}Land Parcels{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <form class="d-flex gap-2" method="get" style="max-width:420px; flex:1;">
+    <input class="form-control" type="search" name="q" placeholder="Search by name or location…"
+           value="{{ q }}">
+    <button class="btn btn-outline-gs" type="submit"><i class="bi bi-search"></i></button>
+  </form>
+  <a href="/parcels/new" class="btn btn-gs"><i class="bi bi-plus-lg me-1"></i>New Parcel</a>
+</div>
+
+<div class="card-gs">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>Parcel</th><th>Location</th><th>Georeferenced</th><th>Images</th><th>Analyses</th><th></th></tr></thead>
+      <tbody>
+      {% for p in parcels %}
+        <tr>
+          <td><a href="/parcels/{{ p.id }}"><strong>{{ p.parcel_name }}</strong></a></td>
+          <td class="small">{{ p.location or '<span class="text-muted">—</span>'|safe }}</td>
+          <td>
+            {% if p.is_georeferenced %}
+              <span class="badge-verified">yes</span>
+              <span class="small text-muted d-block">{{ '%.5f'|format(p.latitude) }}, {{ '%.5f'|format(p.longitude) }}</span>
+            {% else %}
+              <span class="badge-neutral">not georeferenced</span>
+            {% endif %}
+          </td>
+          <td>{{ p.images|length }}</td>
+          <td>{{ p.analyses|length }}</td>
+          <td class="text-end">
+            <a href="/parcels/{{ p.id }}" class="btn btn-sm btn-outline-gs">Open</a>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6">
+          <div class="empty-state"><i class="bi bi-geo-alt"></i>
+            {% if q %}No parcels match "{{ q }}".{% else %}No parcels yet — create your first one.{% endif %}
+          </div></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

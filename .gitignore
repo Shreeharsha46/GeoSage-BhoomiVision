@@ -1,0 +1,25 @@
+# Python
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local secrets
+.env
+
+# Local data (directories are kept via .gitkeep files)
+database/*.db
+instance/
+
+uploads/**
+!uploads/**/
+!uploads/**/*.gitkeep
+
+outputs/**
+!outputs/**/
+!outputs/**/*.gitkeep
+
+# OS noise
+Thumbs.db
+.DS_Store
+test-results/

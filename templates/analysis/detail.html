@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Analysis #{{ analysis.id }}{% endblock %}
+{% block page_title %}Analysis Result #{{ analysis.id }}{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-12">
+    <div class="card bg-gs-card border-gs p-3">
+        <h4>{{ analysis.parcel.parcel_name }}</h4>
+        <p>{{ analysis.analysis_date.strftime('%Y-%m-%d %H:%M') }} | {{ analysis.review_priority }} priority</p>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card bg-gs-card border-gs mb-4">
+      <div class="card-header border-gs">Visual Results</div>
+      <div class="card-body">
+        {% set artifacts = analysis.artifacts_json %}
+        {% for key in artifact_keys %}
+          {% if artifacts and artifacts.get(key) %}
+          <div class="mb-3">
+             <h6>{{ key|title }}</h6>
+             <img src="{{ url_for('media.serve_artifact', analysis_id=analysis.id, key=key) }}" class="img-fluid border-gs">
+          </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card bg-gs-card border-gs mb-4">
+        <div class="card-header border-gs">Flagged Regions</div>
+        <div class="card-body">
+            {% for region in regions %}
+            <div class="alert alert-warning border-gs mb-2">
+                <strong>Region {{ loop.index }}</strong> - {{ region.explanation }}
+            </div>
+            {% endfor %}
+            {% if not regions %}
+            <p class="text-muted">No regions were detected in this analysis.</p>
+            {% endif %}
+        </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

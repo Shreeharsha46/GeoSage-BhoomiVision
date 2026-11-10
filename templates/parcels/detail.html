@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}{{ parcel.parcel_name }}{% endblock %}
+{% block page_title %}Parcel · {{ parcel.parcel_name }}{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div>
+    <h4 class="mb-1">{{ parcel.parcel_name }}</h4>
+    <div class="small text-muted">
+      {{ parcel.location or 'No location description' }} ·
+      created {{ parcel.created_at.strftime('%Y-%m-%d') }}
+      {% if parcel.is_georeferenced %}
+        · <span class="badge-verified">georeferenced</span> {{ '%.5f'|format(parcel.latitude) }}, {{ '%.5f'|format(parcel.longitude) }}
+        {% if parcel.coordinate_reference_system %}({{ parcel.coordinate_reference_system }}){% endif %}
+      {% else %}
+        · <span class="badge-neutral">not georeferenced</span>
+      {% endif %}
+    </div>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="/analysis/new?parcel={{ parcel.id }}" class="btn btn-gs"><i class="bi bi-plus-circle me-1"></i>New Analysis</a>
+    <a href="/parcels/{{ parcel.id }}/edit" class="btn btn-outline-gs"><i class="bi bi-pencil"></i> Edit</a>
+    <form method="post" action="/parcels/{{ parcel.id }}/delete" data-confirm="Delete this parcel with ALL its images, analyses and reviews? This cannot be undone.">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-outline-gs" style="border-color:var(--red);color:var(--red);"><i class="bi bi-trash"></i> Delete</button>
+    </form>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card-gs">
+      <div class="card-header-gs"><h5><i class="bi bi-images"></i>Image history</h5>
+        <span class="small text-muted">{{ images|length }} image(s)</span></div>
+      <div class="card-body-gs">
+        {% if images %}
+        <div class="row g-3">
+          {% for img in images %}
+          <div class="col-6 col-md-4">
+            <a href="/media/image/{{ img.id }}" target="_blank" class="img-frame">
+              <img src="/media/image/{{ img.id }}" alt="{{ img.image_type }} image" loading="lazy"
+                   style="height:130px; object-fit:cover;">
+            </a>
+            <div class="d-flex justify-content-between align-items-center mt-1">
+              <span class="badge-neutral">{{ {'old':'Previous','recent':'Recent','extra':'Additional'}[img.image_type] }}</span>
+              <span class="small text-muted">{{ img.image_date or 'date unknown' }}</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state"><i class="bi bi-image"></i>No images yet. Add one below or start an analysis.</div>
+        {% endif %}
+
+        <hr style="border-color:var(--border);">
+        <form method="post" action="/parcels/{{ parcel.id }}/images" enctype="multipart/form-data" class="row g-2 align-items-end">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="col-md-5">
+            <label class="form-label">Add image to history</label>
+            <input class="form-control" type="file" name="image" accept=".jpg,.jpeg,.png,.tif,.tiff" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Type</label>
+            <select class="form-select" name="image_type">
+              <option value="extra">Additional</option>
+              <option value="old">Previous</option>
+              <option value="recent">Recent</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Capture date</label>
+            <input class="form-control" type="date" name="image_date">
+          </div>
+          <div class="col-md-2">
+            <button class="btn btn-outline-gs w-100">Add</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card-gs">
+      <div class="card-header-gs"><h5><i class="bi bi-activity"></i>Analyses</h5>
+        <span class="small text-muted">{{ parcel.analyses|length }} record(s)</span></div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead><tr><th>#</th><th>Change %</th><th>Priority</th><th>Date</th><th></th></tr></thead>
+          <tbody>
+          {% for a in parcel.analyses|sort(attribute='analysis_date', reverse=true) %}
+            <tr>
+              <td>{{ a.id }}</td>
+              <td>{{ '%.2f'|format(a.change_percentage or 0) }}%</td>
+              <td>{% if a.review_priority %}<span class="badge-{{ a.review_priority if a.review_priority in ('low','medium','high') else 'neutral' }}">{{ a.review_priority|replace('_',' ') }}</span>{% else %}—{% endif %}</td>
+              <td class="small text-muted">{{ a.analysis_date.strftime('%Y-%m-%d %H:%M') }}</td>
+              <td><a href="/analysis/{{ a.id }}" class="small">Open</a></td>
+            </tr>
+          {% else %}
+            <tr><td colspan="5" class="text-muted small">No analyses for this parcel yet.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card-gs">
+      <div class="card-header-gs"><h5><i class="bi bi-bounding-box-circles"></i>Boundaries</h5>
+        <a href="/boundaries/parcel/{{ parcel.id }}" class="small">Verify →</a></div>
+      <div class="card-body-gs">
+        {% if parcel.boundaries %}
+          <ul class="list-unstyled mb-0">
+            {% for b in parcel.boundaries %}
+            <li class="d-flex justify-content-between py-2" style="border-bottom:1px dashed var(--border);">
+              <div>
+                <span class="badge-neutral">{{ b.geometry_type or 'geometry' }}</span>
+                <span class="small ms-1">{{ b.boundary_file.split('/')[-1] }}</span>
+                <span class="small text-muted d-block">{{ b.coordinate_reference_system or 'CRS not stated' }}</span>
+              </div>
+              <a href="/media/boundary/{{ b.id }}" class="small">View</a>
+            </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="small text-muted mb-0">No boundary files uploaded yet. Upload one from the
+          <a href="/boundaries/parcel/{{ parcel.id }}">Boundary Verification</a> page.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if parcel.is_georeferenced %}
+    <div class="card-gs">
+      <div class="card-header-gs"><h5><i class="bi bi-map"></i>Parcel location</h5></div>
+      <div class="card-body-gs"><div id="parcel-map" style="height:260px; border-radius:10px;"></div></div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if parcel.is_georeferenced %}
+<script src="{{ url_for('static', filename='vendor/leaflet/leaflet.js') }}"></script>
+<script>
+  const parcelMap = L.map("parcel-map").setView([{{ parcel.latitude }}, {{ parcel.longitude }}], 15);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+    { maxZoom: 19, attribution: "&copy; OpenStreetMap contributors" }).addTo(parcelMap);
+  L.circleMarker([{{ parcel.latitude }}, {{ parcel.longitude }}],
+    { radius: 10, color: "#2ecc71", fillColor: "#2ecc71", fillOpacity: .5, weight: 2 })
+    .addTo(parcelMap).bindPopup("<strong>{{ parcel.parcel_name }}</strong>");
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Register{% endblock %}
+{% block auth_content %}
+<h4 class="mb-3">Create your analyst account</h4>
+<form method="post" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="mb-3">
+    <label class="form-label" for="name">Full name</label>
+    <input class="form-control" id="name" name="name" required
+           value="{{ request.form.get('name', '') }}">
+  </div>
+  <div class="mb-3">
+    <label class="form-label" for="email">E-mail</label>
+    <input class="form-control" type="email" id="email" name="email" required
+           value="{{ request.form.get('email', '') }}">
+  </div>
+  <div class="mb-3">
+    <label class="form-label" for="password">Password</label>
+    <input class="form-control" type="password" id="password" name="password" required>
+    <div class="form-text">Minimum 8 characters, with at least one letter and one digit.</div>
+  </div>
+  <div class="mb-3">
+    <label class="form-label" for="confirm">Confirm password</label>
+    <input class="form-control" type="password" id="confirm" name="confirm" required>
+  </div>
+  <button class="btn btn-gs w-100" type="submit">Register</button>
+</form>
+<p class="text-center mt-3 mb-0 small text-muted">
+  Already registered? <a href="{{ url_for('auth.login') }}">Log in</a>
+</p>
+{% endblock %}

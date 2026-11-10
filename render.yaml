@@ -1,0 +1,47 @@
+# Render deployment configuration for GeoSage
+# https://render.com/docs/deploy-flask
+
+services:
+  - type: web
+    name: geosage-bhoomi-vision
+    runtime: python
+    plan: free
+    region: oregon  # or frankfurt for EU
+
+    # Build command - install dependencies
+    buildCommand: |
+      pip install --upgrade pip setuptools wheel
+      pip install -r requirements.txt
+
+    # Start command - use gunicorn with config
+    startCommand: gunicorn -c gunicorn.conf.py wsgi:app
+
+    # Environment variables (set sensitive ones in Render dashboard)
+    envVars:
+      - key: FLASK_CONFIG
+        value: production
+      - key: PYTHON_VERSION
+        value: 3.11
+      # Set these in Render Dashboard > Environment:
+      # - SECRET_KEY (generate a secure random string)
+      # - DATABASE_URL (if using PostgreSQL instead of SQLite)
+
+    # Health check endpoint
+    healthCheckPath: /health
+
+    # Auto-deploy on push to main branch
+    autoDeploy: true
+
+# Optional: Add a PostgreSQL database (free tier available)
+# databases:
+#   - name: geosage-db
+#     databaseName: geosage
+#     user: geosage_user
+#     plan: free
+
+# Note: On Render free tier:
+# - SQLite is NOT persistent across deploys (ephemeral filesystem)
+# - For persistent storage, use PostgreSQL addon or external storage
+# - Free tier has 512 MB RAM limit (may be tight for OpenCV/GeoPandas)
+# - Free tier spins down after 15 min inactivity (cold start ~30s)
+# - Custom domains require paid plan

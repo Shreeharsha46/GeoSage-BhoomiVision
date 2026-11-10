@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-3">
+    <div class="stat-card">
+      <div class="icon green"><i class="bi bi-geo-alt"></i></div>
+      <div><div class="value">{{ stats.total_parcels }}</div><div class="label">Total Land Parcels</div></div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="stat-card">
+      <div class="icon cyan"><i class="bi bi-activity"></i></div>
+      <div><div class="value">{{ stats.total_analyses }}</div><div class="label">Total Analyses</div></div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="stat-card">
+      <div class="icon amber"><i class="bi bi-exclamation-triangle"></i></div>
+      <div><div class="value">{{ stats.changes_detected }}</div><div class="label">Changes Detected</div></div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="stat-card">
+      <div class="icon red"><i class="bi bi-hourglass-split"></i></div>
+      <div><div class="value">{{ stats.pending_verification }}</div><div class="label">Pending Verification</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-8">
+    <div class="card-gs h-100">
+      <div class="card-header-gs"><h5><i class="bi bi-graph-up"></i>Change Trends</h5>
+        <span class="small text-muted">change % per analysis</span></div>
+      <div class="card-body-gs">
+        {% if trend %}
+          <canvas id="trendChart" height="120"></canvas>
+        {% else %}
+          <div class="empty-state"><i class="bi bi-graph-up"></i>No analyses yet — run your first comparison to see trends.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card-gs h-100">
+      <div class="card-header-gs"><h5><i class="bi bi-pie-chart"></i>Review Priority Distribution</h5></div>
+      <div class="card-body-gs">
+        {% if stats.changes_detected %}
+          <canvas id="priorityChart" height="200"></canvas>
+          <p class="small text-muted mt-3 mb-0">Priorities are AI-generated <em>review</em> priorities, not proof of encroachment.</p>
+        {% else %}
+          <div class="empty-state"><i class="bi bi-pie-chart"></i>No detected regions yet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-8">
+    <div class="card-gs">
+      <div class="card-header-gs"><h5><i class="bi bi-clock-history"></i>Recent Analyses</h5>
+        <a href="/analysis/" class="small">View all →</a></div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead><tr><th>Parcel</th><th>Change %</th><th>Priority</th><th>Date</th><th></th></tr></thead>
+          <tbody>
+          {% for a in recent %}
+            <tr>
+              <td>{{ a.parcel.parcel_name }}</td>
+              <td>{{ '%.2f'|format(a.change_percentage or 0) }}%</td>
+              <td>{% if a.review_priority %}<span class="badge-{{ a.review_priority if a.review_priority in ('low','medium','high') else 'neutral' }}">{{ a.review_priority|replace('_',' ') }}</span>{% else %}<span class="badge-neutral">—</span>{% endif %}</td>
+              <td class="small text-muted">{{ a.analysis_date.strftime('%Y-%m-%d %H:%M') }}</td>
+              <td><a href="/analysis/{{ a.id }}" class="small">Open</a></td>
+            </tr>
+          {% else %}
+            <tr><td colspan="5"><div class="empty-state"><i class="bi bi-inbox"></i>No analyses yet. <a href="/analysis/new">Start one now</a>.</div></td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card-gs h-100">
+      <div class="card-header-gs"><h5><i class="bi bi-list-ul"></i>Parcel Activity</h5>
+        <a href="/parcels/" class="small">Manage →</a></div>
+      <div class="card-body-gs" style="max-height:380px; overflow-y:auto;">
+        {% for p in activity %}
+          <div class="d-flex justify-content-between align-items-center py-2" style="border-bottom:1px dashed var(--border);">
+            <div>
+              <div class="small">{{ p.name }}</div>
+              <div class="text-muted" style="font-size:.72rem;">
+                {{ p.images }} image(s) · {{ p.analyses }} analysis(es)
+                {% if not p.georeferenced %} · <span class="badge-neutral">not georeferenced</span>{% endif %}
+              </div>
+            </div>
+            <div class="small">{% if p.last_change is not none %}<strong>{{ '%.1f'|format(p.last_change) }}%</strong> latest{% endif %}</div>
+          </div>
+        {% else %}
+          <div class="empty-state"><i class="bi bi-geo-alt"></i>No parcels yet. <a href="/parcels/new">Create one</a>.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card-gs">
+  <div class="card-header-gs"><h5><i class="bi bi-map"></i>GIS Overview</h5>
+    <span class="small text-muted">only georeferenced parcels are mapped — coordinates are never invented</span></div>
+  <div class="card-body-gs">
+    <div class="row g-3">
+      <div class="col-lg-9"><div id="map-dashboard"></div></div>
+      <div class="col-lg-3">
+        <div class="section-title">Not georeferenced</div>
+        <ul class="list-unstyled small" id="unlocated-list"><li class="text-muted">Loading…</li></ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/leaflet/leaflet.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/chartjs/chart.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

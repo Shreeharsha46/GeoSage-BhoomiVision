@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>{% block title %}GeoSage{% endblock %} · GeoSage</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="text-center mb-4">
+      <div style="font-size:1.7rem;font-weight:700;">Geo<span style="color:var(--green)">Sage</span></div>
+      <div style="font-size:.68rem;letter-spacing:2.5px;color:var(--cyan);text-transform:uppercase;">BHOOMI VISION</div>
+    </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'danger' else ('warning' if category == 'warning' else 'info') }} py-2 small">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endwith %}
+    {% block auth_content %}{% endblock %}
+  </div>
+</div>
+</body>
+</html>

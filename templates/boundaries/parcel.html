@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Parcel Boundary{% endblock %}
+{% block page_title %}{{ parcel.parcel_name }} - Boundaries{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card bg-gs-card border-gs mb-4">
+            <div class="card-header border-gs">Boundary Records</div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush bg-dark">
+                    {% for r in records %}
+                    <li class="list-group-item bg-dark text-light border-secondary d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ r.label or r.boundary_file }}</strong> <span class="badge bg-secondary">{{ r.source }}</span>
+                        </div>
+                        <form action="{{ url_for('boundaries.delete_record', record_id=r.id) }}" method="POST" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                        </form>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="card bg-gs-card border-gs">
+            <div class="card-header border-gs">Candidate Detection</div>
+            <div class="card-body">
+                <form action="{{ url_for('boundaries.detect', parcel_id=parcel.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <select name="image_id" class="form-select mb-3 bg-dark text-light">
+                        {% for img in images %}
+                        <option value="{{ img.id }}">Image #{{ img.id }} ({{ img.image_type }})</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-warning w-100">Detect Candidate Boundaries</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card bg-gs-card border-gs">
+            <div class="card-header border-gs">Polygon Comparison</div>
+            <div class="card-body">
+                <form action="{{ url_for('boundaries.compare', parcel_id=parcel.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label class="form-label">Recorded Boundary</label>
+                        <select name="recorded_id" class="form-select bg-dark text-light">
+                            {% for r in records %}
+                            <option value="{{ r.id }}">{{ r.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Candidate Polygon</label>
+                        <select name="candidate_id" class="form-select bg-dark text-light">
+                            {% for r in records %}
+                            <option value="{{ r.id }}">{{ r.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Compare Polygons</button>
+                </form>
+                {% if comparison %}
+                <hr class="border-secondary">
+                <h5>Comparison Results</h5>
+                <p>IoU: <strong>{{ comparison.iou }}</strong></p>
+                <p>Screening Priority: <span class="badge bg-danger">{{ comparison.priority }}</span></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

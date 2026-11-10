@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block page_title %}Settings{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card-gs">
+      <div class="card-header-gs"><h5><i class="bi bi-person"></i>Profile</h5></div>
+      <div class="card-body-gs">
+        <form method="post" action="/settings/profile">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input class="form-control" name="name" value="{{ current_user.name }}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">E-mail</label>
+            <input class="form-control" value="{{ current_user.email }}" disabled>
+            <div class="form-text">E-mail cannot be changed in this demo.</div>
+          </div>
+          <button class="btn btn-gs">Save profile</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card-gs">
+      <div class="card-header-gs"><h5><i class="bi bi-key"></i>Change password</h5></div>
+      <div class="card-body-gs">
+        <form method="post" action="/settings/password">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label class="form-label">Current password</label>
+            <input class="form-control" type="password" name="current_password" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">New password</label>
+            <input class="form-control" type="password" name="new_password" required>
+            <div class="form-text">Min. 8 characters, at least one letter and one digit.</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Confirm new password</label>
+            <input class="form-control" type="password" name="confirm_password" required>
+          </div>
+          <button class="btn btn-gs">Change password</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card-gs">
+      <div class="card-header-gs"><h5><i class="bi bi-cpu"></i>System information</h5></div>
+      <div class="card-body-gs">
+        <table class="table mb-0">
+          <tbody>
+          {% for name, version in system_info.items() %}
+            <tr><td class="text-muted">{{ name }}</td><td class="text-end">{{ version }}</td></tr>
+          {% endfor %}
+          <tr><td class="text-muted">Your role</td><td class="text-end">{{ current_user.role }}</td></tr>
+          </tbody>
+        </table>
+        <div class="disclaimer-strip p-3 mt-3 small">
+          <i class="bi bi-shield-check me-1"></i>
+          GeoSage runs fully offline — image analysis uses local OpenCV; no paid APIs or cloud AI
+          services are involved. Map tiles require internet access.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

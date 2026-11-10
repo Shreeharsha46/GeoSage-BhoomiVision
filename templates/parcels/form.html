@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit parcel' if parcel else 'New parcel' }}{% endblock %}
+{% block page_title %}{{ 'Edit Parcel' if parcel else 'New Land Parcel' }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card-gs">
+      <div class="card-header-gs"><h5><i class="bi bi-geo-alt"></i>{{ 'Edit' if parcel else 'Create' }} land parcel</h5></div>
+      <div class="card-body-gs">
+        <form method="post" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label class="form-label" for="parcel_name">Parcel name *</label>
+            <input class="form-control" id="parcel_name" name="parcel_name" required
+                   value="{{ parcel.parcel_name if parcel else request.form.get('parcel_name', '') }}">
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="location">Location description</label>
+            <input class="form-control" id="location" name="location"
+                   placeholder="Village / ward / survey number (free text)"
+                   value="{{ parcel.location if parcel else request.form.get('location', '') }}">
+          </div>
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label" for="latitude">Latitude</label>
+              <input class="form-control" id="latitude" name="latitude" type="number" step="any" min="-90" max="90"
+                     value="{{ parcel.latitude if parcel and parcel.latitude is not none else '' }}">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label" for="longitude">Longitude</label>
+              <input class="form-control" id="longitude" name="longitude" type="number" step="any" min="-180" max="180"
+                     value="{{ parcel.longitude if parcel and parcel.longitude is not none else '' }}">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label" for="crs">Coordinate reference system</label>
+              <input class="form-control" id="crs" name="coordinate_reference_system" placeholder="e.g. EPSG:4326"
+                     value="{{ parcel.coordinate_reference_system if parcel else request.form.get('coordinate_reference_system', '') }}">
+            </div>
+          </div>
+          <p class="form-text">
+            Coordinates are <strong>optional</strong>. Leave them empty when unknown — the parcel will be
+            clearly marked “not georeferenced” and never placed at invented map positions.
+          </p>
+          <div class="d-flex gap-2">
+            <button class="btn btn-gs" type="submit">{{ 'Save changes' if parcel else 'Create parcel' }}</button>
+            <a href="/parcels/" class="btn btn-outline-gs">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Smart Assistant{% endblock %}
+{% block page_title %}AI Assistant{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card bg-gs-card border-gs mb-4">
+            <div class="card-header border-gs">Ask About Analysis</div>
+            <div class="card-body">
+                <form id="askForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label>Analysis</label>
+                        <select name="analysis_id" class="form-select bg-dark text-light" required>
+                            <option value="">Select analysis...</option>
+                            {% for a in analyses %}
+                            <option value="{{ a.id }}">Analysis #{{ a.id }} ({{ a.parcel.parcel_name }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label>Your Question</label>
+                        <textarea name="question" class="form-control bg-dark text-light" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Ask Assistant</button>
+                </form>
+            </div>
+        </div>
+        <div class="card bg-gs-card border-gs">
+            <div class="card-header border-gs">Sample Questions</div>
+            <div class="card-body">
+                <ul class="small">
+                    <li>What changes were detected</li>
+                    <li>Why was region 1 flagged</li>
+                    <li>What is the boundary mismatch</li>
+                    <li>What land-use changes were observed</li>
+                    <li>Summarize this analysis</li>
+                    <li>Is this result legally verified</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card bg-gs-card border-gs">
+            <div class="card-header border-gs">Assistant Answer</div>
+            <div class="card-body">
+                <div id="answerPanel" class="text-light">
+                    <p class="text-muted">Select an analysis and ask a question to get started.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('askForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const analysisId = form.analysis_id.value;
+        const question = form.question.value;
+        const panel = document.getElementById('answerPanel');
+        panel.innerHTML = '<p class="text-info">Loading...</p>';
+        try {
+            const res = await fetch(`/assistant/ask`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ analysis_id: analysisId, question: question })
+            });
+            const data = await res.json();
+            panel.innerHTML = `<p>${data.answer}</p>`;
+        } catch (err) {
+            panel.innerHTML = '<p class="text-danger">Error: ' + err.message + '</p>';
+        }
+    });
+</script>
+{% endblock %}

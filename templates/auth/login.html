@@ -1,0 +1,29 @@
+{% extends "auth/base_auth.html" %}
+{% block title %}Log in{% endblock %}
+{% block auth_content %}
+<h4 class="mb-3">Welcome back</h4>
+<form method="post" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="mb-3">
+    <label class="form-label" for="email">E-mail</label>
+    <input class="form-control" type="email" id="email" name="email" required autofocus
+           value="{{ request.form.get('email', '') }}">
+  </div>
+  <div class="mb-3">
+    <label class="form-label" for="password">Password</label>
+    <input class="form-control" type="password" id="password" name="password" required>
+  </div>
+  <div class="form-check mb-3">
+    <input class="form-check-input" type="checkbox" id="remember" name="remember">
+    <label class="form-check-label small text-muted" for="remember">Remember me</label>
+  </div>
+  <button class="btn btn-gs w-100" type="submit">Log in</button>
+</form>
+<p class="text-center mt-3 mb-0 small text-muted">
+  No account yet? <a href="{{ url_for('auth.register') }}">Register</a>
+</p>
+<div class="disclaimer-strip p-2 mt-4 small">
+  <strong>Demo accounts</strong> — admin@geosage.test / Admin@1234 ·
+  analyst@geosage.test / Analyst@1234
+</div>
+{% endblock %}

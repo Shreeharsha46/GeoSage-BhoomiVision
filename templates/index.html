@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GeoSage · BHOOMI VISION — AI-Powered Rural Land Intelligence</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<nav class="topbar" style="position: relative;">
+  <div class="d-flex align-items-center gap-2">
+    <span style="font-size:1.3rem;font-weight:700;">Geo<span style="color:var(--green)">Sage</span></span>
+    <span style="font-size:.66rem;letter-spacing:2.5px;color:var(--cyan);text-transform:uppercase;margin-top:4px;">BHOOMI VISION</span>
+  </div>
+  <div>
+    {% if current_user.is_authenticated %}
+      <a href="/dashboard" class="btn btn-gs btn-sm">Dashboard</a>
+    {% else %}
+      <a href="{{ url_for('auth.login') }}" class="btn btn-outline-gs btn-sm me-2">Log in</a>
+      <a href="{{ url_for('auth.register') }}" class="btn btn-gs btn-sm">Register</a>
+    {% endif %}
+  </div>
+</nav>
+
+<section class="landing-hero">
+  <div class="platform-kicker">BHOOMI VISION PLATFORM</div>
+  <h1>Geo<span>Sage</span></h1>
+  <p class="tagline">Intelligent Land Monitoring, Boundary Verification and Change Detection Using AI —
+    compare old and recent satellite or drone imagery of rural land parcels, screen possible boundary
+    mismatches, and generate explainable, human-reviewable reports. Fully offline, free and open source.</p>
+  <a href="{{ url_for('auth.login') if current_user.is_authenticated else url_for('auth.register') }}" class="btn btn-gs btn-lg px-4">
+    <i class="bi bi-play-circle me-2"></i>Start Analysis
+  </a>
+</section>
+
+<div class="container pb-4">
+  <div class="disclaimer-strip p-3 mb-5 d-flex gap-3 align-items-start">
+    <i class="bi bi-exclamation-triangle mt-1"></i>
+    <div><strong>Important:</strong> all AI findings produced by GeoSage are <u>preliminary screening aids</u>.
+    They are never legally verified property boundaries and must be confirmed by authorized land
+    surveyors or government officials.</div>
+  </div>
+
+  <div class="section-title">WHAT GEOSAGE DOES</div>
+  <div class="row g-3 mb-5">
+    <div class="col-md-4">
+      <div class="feature-card">
+        <i class="bi bi-images"></i>
+        <h5>Change Detection</h5>
+        <p class="text-muted mb-0 small">ORB feature matching + homography alignment, then image differencing,
+        morphological filtering and contour analysis find where the land visually changed.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="feature-card">
+        <i class="bi bi-bounding-box-circles"></i>
+        <h5>Boundary Verification</h5>
+        <p class="text-muted mb-0 small">Upload GeoJSON/KML boundaries or draw polygons, then compare recorded vs
+        candidate geometry (IoU, overlap, displacement) with Shapely — metric areas only with a valid CRS.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="feature-card">
+        <i class="bi bi-fire"></i>
+        <h5>Change Heatmap</h5>
+        <p class="text-muted mb-0 small">Green → yellow → red overlay shows pixel-change intensity, with adjustable
+        opacity, region inspection and statistics. Intensity ≠ encroachment risk.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="feature-card">
+        <i class="bi bi-tree"></i>
+        <h5>Land-Use Monitoring</h5>
+        <p class="text-muted mb-0 small">A clearly-labelled classical computer-vision baseline estimates vegetation,
+        agriculture, built-up, bare-soil and water proportions and their shifts over time.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="feature-card">
+        <i class="bi bi-question-circle"></i>
+        <h5>Explainable AI</h5>
+        <p class="text-muted mb-0 small">Every flagged region answers "WHY WAS THIS AREA FLAGGED?" using real
+        processing outputs — never fabricated measurements.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="feature-card">
+        <i class="bi bi-clipboard-check"></i>
+        <h5>Human Verification</h5>
+        <p class="text-muted mb-0 small">Reviewers mark findings as pending, verified or rejected, with a complete
+        audit trail. AI never has the final word.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">HOW IT WORKS</div>
+  <div class="row g-3 mb-5">
+    {% set steps = [
+      ("Create a land parcel", "Register, then record the parcel with optional coordinates and CRS."),
+      ("Upload two images", "A previous and a recent satellite/drone image (JPG/PNG/TIFF), with capture dates."),
+      ("AI comparison", "Registration aligns the images; change detection finds and measures changed regions."),
+      ("Verify & report", "Screen boundaries, inspect explanations, record human verification, download the PDF report."),
+    ] %}
+    {% for title, text in steps %}
+    <div class="col-md-3">
+      <div class="feature-card text-center">
+        <span class="step-number mb-3">{{ loop.index }}</span>
+        <h5 class="h6">{{ title }}</h5>
+        <p class="text-muted mb-0 small">{{ text }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<footer class="text-center py-4" style="border-top:1px solid var(--border); color:var(--muted); font-size:.82rem;">
+  GeoSage · BHOOMI VISION — engineering mini project · {{ current_year }}
+  · runs locally, no paid APIs, no cloud AI services
+</footer>
+
+<script src="{{ url_for('static', filename='vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>

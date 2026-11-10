@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>{% block title %}GeoSage{% endblock %} · BHOOMI VISION</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+{% block head %}{% endblock %}
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <div class="logo">Geo<span>Sage</span></div>
+    <div class="platform">BHOOMI VISION</div>
+  </div>
+  <nav>
+    <a href="/dashboard" class="{{ 'active' if request.path == '/dashboard' }}"><i class="bi bi-grid-1x2"></i> Dashboard</a>
+    <a href="/analysis/new" class="{{ 'active' if request.path == '/analysis/new' }}"><i class="bi bi-plus-circle"></i> New Analysis</a>
+    <a href="/parcels/" class="{{ 'active' if request.path.startswith('/parcels') }}"><i class="bi bi-geo-alt"></i> Land Parcels</a>
+    <a href="/analysis/" class="{{ 'active' if request.path.startswith('/analysis') and request.path != '/analysis/new' }}"><i class="bi bi-images"></i> Image Comparison</a>
+    <a href="/boundaries/" class="{{ 'active' if request.path.startswith('/boundaries') }}"><i class="bi bi-bounding-box-circles"></i> Boundary Verification</a>
+    <a href="/landuse/" class="{{ 'active' if request.path.startswith('/landuse') }}"><i class="bi bi-tree"></i> Land-Use Monitoring</a>
+    <a href="/history/" class="{{ 'active' if request.path.startswith('/history') }}"><i class="bi bi-clock-history"></i> Historical Timeline</a>
+    <a href="/reports/" class="{{ 'active' if request.path.startswith('/reports') }}"><i class="bi bi-file-earmark-pdf"></i> AI Reports</a>
+    <a href="/assistant/" class="{{ 'active' if request.path.startswith('/assistant') }}"><i class="bi bi-chat-dots"></i> AI Assistant</a>
+    <a href="/settings/" class="{{ 'active' if request.path.startswith('/settings') }}"><i class="bi bi-gear"></i> Settings</a>
+    {% if current_user.role == 'admin' %}
+    <a href="/admin/users" class="{{ 'active' if request.path.startswith('/admin') }}"><i class="bi bi-people"></i> Manage Users</a>
+    {% endif %}
+  </nav>
+  <div class="sidebar-footer">
+    AI findings are preliminary and require verification by authorized land surveyors or officials.
+  </div>
+</aside>
+
+<div class="main-content">
+  <header class="topbar">
+    <div class="d-flex align-items-center gap-3">
+      <button class="sidebar-toggle" type="button" aria-label="Toggle navigation"><i class="bi bi-list"></i></button>
+      <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+    </div>
+    <div class="user-chip">
+      <div class="avatar">{{ current_user.name[:1]|upper }}</div>
+      <div class="meta">
+        <div class="name">{{ current_user.name }}</div>
+        <div class="role">{{ current_user.role }}</div>
+      </div>
+      <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-gs btn-sm ms-2" title="Log out"><i class="bi bi-box-arrow-right"></i></a>
+    </div>
+  </header>
+
+  <main class="content">
+    {# Server flash messages are relayed to the JS toast system #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash-data" data-category="{{ category }}" data-message="{{ message }}"></div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+
+<script src="{{ url_for('static', filename='vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

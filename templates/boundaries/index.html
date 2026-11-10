@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Boundaries{% endblock %}
+{% block page_title %}Boundary Management{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card bg-gs-card border-gs mb-4">
+            <div class="card-header border-gs">Upload Boundary</div>
+            <div class="card-body">
+                <form action="{{ url_for('boundaries.upload') }}" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <select name="parcel_id" class="form-select mb-3 bg-dark text-light">
+                        {% for p in parcels %}
+                        <option value="{{ p.id }}">{{ p.parcel_name }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="file" name="boundary_file" class="form-control mb-3 bg-dark text-light">
+                    <button type="submit" class="btn btn-primary w-100">Upload</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card bg-gs-card border-gs">
+            <div class="card-header border-gs">Parcels & Boundaries</div>
+            <div class="card-body p-0">
+                <table class="table table-dark mb-0">
+                    <thead><tr><th>Parcel</th><th>Boundaries</th><th>Action</th></tr></thead>
+                    <tbody>
+                        {% for p in parcels %}
+                        <tr>
+                            <td>{{ p.parcel_name }}</td>
+                            <td>{{ (boundary_map.get(p.id) or [])|length }}</td>
+                            <td><a href="{{ url_for('boundaries.parcel_view', parcel_id=p.id) }}" class="btn btn-sm btn-info">Manage</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
