@@ -266,8 +266,10 @@ def list_analyses():
 def analysis_detail(analysis_id):
     analysis = get_analysis_or_denied(analysis_id)
     metadata = {}
+    processing = {}
     try:
         metadata = json.loads(analysis.processing_metadata or "{}")
+        processing = metadata.get("change", {})  # Pass just the change part as processing
     except json.JSONDecodeError:
         pass
     regions = analysis.regions
@@ -282,7 +284,7 @@ def analysis_detail(analysis_id):
     parcels = scope_parcels(db.session.query(LandParcel)).all()
     artifacts_json = json.loads(analysis.artifacts or "{}")
     return render_template(
-        "analysis/detail.html", analysis=analysis, metadata=metadata,
+        "analysis/detail.html", analysis=analysis, metadata=metadata, processing=processing,
         regions=regions, landuse=landuse, review=review,
         artifact_keys=ARTIFACT_KEYS, parcels=parcels,
         artifacts_json=artifacts_json,

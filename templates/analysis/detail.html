@@ -6,7 +6,14 @@
   <div class="col-12">
     <div class="card bg-gs-card border-gs p-3">
         <h4>{{ analysis.parcel.parcel_name }}</h4>
-        <p>{{ analysis.analysis_date.strftime('%Y-%m-%d %H:%M') }} | {{ analysis.review_priority }} priority</p>
+        <p>{{ analysis.analysis_date.strftime('%Y-%m-%d %H:%M') }} | 
+           <span class="badge-{{ analysis.review_priority if analysis.review_priority in ('low','medium','high') else 'neutral' }}">{{ analysis.review_priority }}</span>
+           {% if analysis.change_percentage is not none %}
+             | Change: {{ '%.2f'|format(analysis.change_percentage) }}%
+           {% else %}
+             | Change: Not computed
+           {% endif %}
+        </p>
     </div>
   </div>
 
@@ -14,12 +21,17 @@
     <div class="card bg-gs-card border-gs mb-4">
       <div class="card-header border-gs">Visual Results</div>
       <div class="card-body">
-        {% set artifacts = analysis.artifacts_json %}
+        {% set artifacts = artifacts_json %}
         {% for key in artifact_keys %}
           {% if artifacts and artifacts.get(key) %}
           <div class="mb-3">
              <h6>{{ key|title }}</h6>
              <img src="{{ url_for('media.serve_artifact', analysis_id=analysis.id, key=key) }}" class="img-fluid border-gs">
+          </div>
+          {% else %}
+          <div class="mb-3">
+             <h6>{{ key|title }}</h6>
+             <p class="text-muted small">Not available</p>
           </div>
           {% endif %}
         {% endfor %}
@@ -40,6 +52,183 @@
             <p class="text-muted">No regions were detected in this analysis.</p>
             {% endif %}
         </div>
+    </div>
+  </div>
+
+  <div class="col-lg-12">
+    <div class="card bg-gs-card border-gs mb-4">
+      <div class="card-header border-gs">Registration Quality</div>
+      <div class="card-body">
+        {% if metadata and metadata.registration %}
+          <table class="table table-dark table-sm">
+            <tbody>
+              <tr><td>Keypoints (prev/recent)</td><td>{{ metadata.registration.keypoints_old or '—' }} / {{ metadata.registration.keypoints_new or '—' }}</td></tr>
+              <tr><td>Good Matches</td><td>{{ metadata.registration.good_matches or '—' }}</td></tr>
+              <tr><td>Inliers / Inlier Ratio</td><td>{{ metadata.registration.inliers or '—' }} / {{ '%.2f'|format(metadata.registration.inlier_ratio * 100) if metadata.registration.inlier_ratio is not none else '—' }}%</td></tr>
+              <tr><td>Median Reprojection Error</td><td>{{ metadata.registration.median_reprojection_error is not none and '%.1f px'|format(metadata.registration.median_reprojection_error) or '—' }}</td></tr>
+              <tr><td>Failure Stage</td><td>{{ metadata.registration.failure_stage or '—' }}</td></tr>
+            </tbody>
+          </table>
+        {% else %}
+          <p class="text-muted">No registration data available.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card bg-gs-card border-gs mb-4">
+      <div class="card-header border-gs">Change Detection Results</div>
+      <div class="card-body">
+        {% if analysis.change_percentage is not none %}
+          <p><strong>Visual Change:</strong> {{ '%.2f'|format(analysis.change_percentage) }}% of valid comparison area</p>
+          <p><strong>Changed Pixels:</strong> {{ processing.changed_pixels | default('—') }} of {{ processing.valid_pixels | default('—') }} px</p>
+          <p><strong>Threshold Used:</strong> {{ processing.threshold_used | default('—') }}</p>
+          {% if processing.note %}
+            <div class="alert alert-warning">
+              {{ processing.note }}
+            </div>
+          {% endif %}
+        {% else %}
+          <div class="alert alert-warning">
+            <strong>Change measurement not available.</strong>
+            {% if analysis.result_summary %}
+              <p class="mb-1">{{ analysis.result_summary }}</p>
+            {% endif %}
+            <p class="mb-0 small">Registration failed or comparison could not be completed.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card bg-gs-card border-gs mb-4">
+      <div class="card-header border-gs">Flagged Regions</div>
+      <div class="card-body">
+          {% for region in regions %}
+          <div class="alert alert-warning border-gs mb-2">
+              <strong>Region {{ loop.index }}</strong> - {{ region.explanation }}
+          </div>
+          {% endfor %}
+          {% if not regions %}
+          <p class="text-muted">No regions were detected in this analysis.</p>
+          {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-12">
+    <div class="card bg-gs-card border-gs mb-4">
+      <div class="card-header border-gs">Flagged Regions Details</div>
+      <div class="card-body">
+          {% for region in regions %}
+          <div class="mb-3 p-3 bg-dark border-gs rounded">
+            <h6>Region {{ loop.index }} (Priority: <span class="badge-{{ region.priority }}">{{ region.priority|upper }}</span>)</h6>
+            <p><strong>Area:</strong> {{ region.pixel_area or '—' }} px</p>
+            <p><strong>Mean Diff Intensity:</strong> {{ region.mean_intensity or '—' }} / 255</p>
+            <p><strong>Detection Method:</strong> {{ region.detection_method or '—' }}</p>
+            <p><strong>Explanation:</strong> {{ region.explanation }}</p>
+            {% if region.bbox %}
+              <p><strong>BBox:</strong> {{ region.bbox }}</p>
+            {% endif %}
+            {% if region.centroid %}
+              <p><strong>Centroid:</strong> {{ region.centroid }}</p>
+            {% endif %}
+          </div>
+          {% endfor %}
+          {% if not regions %}
+          <p class="text-muted">No regions were flagged in this analysis.</p>
+          {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card bg-gs-card border-gs mb-4">
+      <div class="card-header border-gs">Image Quality</div>
+      <div class="card-body">
+        {% if metadata and metadata.quality %}
+          <table class="table table-dark table-sm">
+            <tbody>
+              <tr><td>Blur Score (Old / Recent)</td><td>{{ metadata.quality.old.blur_score if metadata.quality.old else '—' }} / {{ metadata.quality.new.blur_score if metadata.quality.new else '—' }}</td></tr>
+              <tr><td>Brightness (Old / Recent)</td><td>{{ metadata.quality.old.brightness if metadata.quality.old else '—' }} / {{ metadata.quality.new.brightness if metadata.quality.new else '—' }}</td></tr>
+              <tr><td>Contrast (Old / Recent)</td><td>{{ metadata.quality.old.contrast if metadata.quality.old else '—' }} / {{ metadata.quality.new.contrast if metadata.quality.new else '—' }}</td></tr>
+            </tbody>
+          </table>
+        {% else %}
+          <p class="text-muted">No image quality data available.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card bg-gs-card border-gs mb-4">
+      <div class="card-header border-gs">Land-Use Observations</div>
+      <div class="card-body">
+        {% if landuse %}
+          <table class="table table-dark table-sm">
+            <thead><tr><th>Category</th><th>Previous</th><th>Recent</th><th>Change</th></tr></thead>
+            <tbody>
+              {% for obs in landuse %}
+              <tr>
+                <td>{{ obs.category }}</td>
+                <td>{{ '%.1f%%'|format(obs.old_proportion * 100) if obs.old_proportion is not none else '—' }}</td>
+                <td>{{ '%.1f%%'|format(obs.new_proportion * 100) if obs.new_proportion is not none else '—' }}</td>
+                <td>{{ '%+.1f%%'|format(obs.delta_proportion * 100) if obs.delta_proportion is not none else '—' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <p class="small text-muted mt-2">Classical HSV baseline - heuristic observations, not trained model predictions.</p>
+        {% else %}
+          <p class="text-muted">No land-use observations stored for this analysis.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card bg-gs-card border-gs mb-4">
+      <div class="card-header border-gs">Boundary Comparison</div>
+      <div class="card-body">
+        {% if analysis.boundary_summary %}
+          {% set boundary = analysis.boundary_summary | fromjson %}
+          <table class="table table-dark table-sm">
+            <tbody>
+              <tr><td>Intersection over Union (IoU)</td><td>{{ boundary.iou or '—' }}</td></tr>
+              <tr><td>Candidate Outside Recorded</td><td>{{ '%.1f%%'|format(boundary.outside_share * 100) if boundary.outside_share is not none else '—' }}</td></tr>
+              <tr><td>Recorded Area Missing</td><td>{{ '%.1f%%'|format(boundary.missing_share * 100) if boundary.missing_share is not none else '—' }}</td></tr>
+              <tr><td>Boundary Displacement</td><td>{{ boundary.displacement or '—' }} {{ boundary.unit or 'px' }}</td></tr>
+              <tr><td>Screening Priority</td><td><span class="badge-{{ boundary.priority if boundary.priority in ('low','medium','high') else 'neutral' }}">{{ boundary.priority|capitalize if boundary.priority else '—' }}</span></td></tr>
+            </tbody>
+          </table>
+          <p class="small text-muted mt-2">{{ boundary.note or 'Screening aid only — not a legal conclusion.' }}</p>
+        {% else %}
+          <p class="text-muted">No boundary comparison has been run for this analysis.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card bg-gs-card border-gs mb-4">
+      <div class="card-header border-gs">Human Verification Status</div>
+      <div class="card-body">
+        {% if review %}
+          <table class="table table-dark table-sm">
+            <tbody>
+              <tr><td>Status</td><td><span class="badge-{{ review.review_status if review.review_status in ('pending_verification','verified_by_reviewer','rejected_false_detection') else 'neutral' }}">{{ review.review_status|replace('_',' ') }}</span></td></tr>
+              <tr><td>Reviewer</td><td>{{ review.reviewer.name if review.reviewer else '—' }}</td></tr>
+              <tr><td>Reviewed At</td><td>{{ review.reviewed_at.strftime('%Y-%m-%d %H:%M') if review.reviewed_at else '—' }}</td></tr>
+              <tr><td>Comments</td><td>{{ review.comments or '—' }}</td></tr>
+            </tbody>
+          </table>
+        {% else %}
+          <p class="text-muted">No verification records exist yet.</p>
+        {% endif %}
+      </div>
     </div>
   </div>
 </div>
